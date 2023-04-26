@@ -1,7 +1,6 @@
 pub mod approve_mint_request;
 pub mod approve_redeem_request;
 pub mod cancel_mint_request;
-pub mod cancel_redeem_request;
 pub mod create_merchant;
 pub mod create_mint_request;
 pub mod create_redeem_request;
@@ -19,7 +18,6 @@ pub mod toggle_merchant_enabled;
 pub use approve_mint_request::*;
 pub use approve_redeem_request::*;
 pub use cancel_mint_request::*;
-pub use cancel_redeem_request::*;
 pub use create_merchant::*;
 pub use create_mint_request::*;
 pub use create_redeem_request::*;

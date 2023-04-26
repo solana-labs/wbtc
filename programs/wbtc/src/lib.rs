@@ -92,10 +92,6 @@ pub mod wbtc {
         instructions::approve_redeem_request::handler(ctx, args)
     }
 
-    pub fn cancel_redeem_request(ctx: Context<CancelRedeemRequestAccounts>) -> Result<()> {
-        instructions::cancel_redeem_request::handler(ctx)
-    }
-
     pub fn toggle_merchant_enabled(ctx: Context<ToggleMerchantEnabledAccounts>) -> Result<()> {
         instructions::toggle_merchant_enabled::handler(ctx)
     }
