@@ -8,8 +8,8 @@ pub struct SetCustodianAccounts<'info> {
     #[account(mut)]
     pub authority: Signer<'info>,
 
-    #[account(mut, 
-        constraint = config.authority == authority.key() 
+    #[account(mut,
+        constraint = config.authority == authority.key()
             || config.custodian == authority.key() @ ErrorCode::InvalidAuthority
     )]
     pub config: Account<'info, Config>,
@@ -20,8 +20,11 @@ pub struct SetCustodianAccounts<'info> {
 
 pub fn handler(ctx: Context<SetCustodianAccounts>) -> Result<()> {
     // rationale: custodian should only be able to change its address if its flag is enabled
-    require!(ctx.accounts.config.custodian_enabled 
-        || ctx.accounts.authority.key() != ctx.accounts.config.custodian, ErrorCode::CustodianDisabled);
+    require!(
+        ctx.accounts.config.custodian_enabled
+            || ctx.accounts.authority.key() != ctx.accounts.config.custodian,
+        ErrorCode::CustodianDisabled
+    );
 
     ctx.accounts.config.custodian = ctx.accounts.new_custodian.key();
 

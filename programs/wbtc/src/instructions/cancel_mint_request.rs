@@ -1,8 +1,8 @@
 use anchor_lang::prelude::*;
 
 use crate::error::ErrorCode;
-use crate::events::{MintEvent, EventKind};
-use crate::state::{Merchant, MintRequest, Config};
+use crate::events::{EventKind, MintEvent};
+use crate::state::{Config, Merchant, MintRequest};
 
 #[derive(Accounts)]
 pub struct CancelMintRequestAccounts<'info> {
@@ -14,7 +14,7 @@ pub struct CancelMintRequestAccounts<'info> {
     #[account(has_one = authority @ ErrorCode::InvalidMerchantAuthority)]
     pub merchant: Account<'info, Merchant>,
 
-    #[account(mut, 
+    #[account(mut,
         has_one = merchant @ ErrorCode::InvalidMerchant,
         close = authority
     )]
@@ -25,6 +25,10 @@ pub fn handler(ctx: Context<CancelMintRequestAccounts>) -> Result<()> {
     require!(ctx.accounts.config.mint_enabled, ErrorCode::MintingDisabled);
     require!(ctx.accounts.merchant.enabled, ErrorCode::MerchantDisabled);
 
-    emit!(MintEvent::create(&ctx.accounts.mint_request, &ctx.accounts.merchant, EventKind::Cancelled)?);
+    emit!(MintEvent::create(
+        &ctx.accounts.mint_request,
+        &ctx.accounts.merchant,
+        EventKind::Cancelled
+    )?);
     Ok(())
 }

@@ -1,5 +1,5 @@
 use anchor_lang::prelude::*;
-use anchor_spl::token::{Token, TokenAccount, Mint, MintTo, mint_to};
+use anchor_spl::token::{mint_to, Mint, MintTo, Token, TokenAccount};
 
 use crate::constants::CONFIG_SEED_PREFIX;
 use crate::error::ErrorCode;
@@ -9,10 +9,9 @@ use crate::state::{Config, Merchant, MintRequest};
 
 #[derive(Accounts)]
 pub struct ApproveMintRequestAccounts<'info> {
-    
     pub custodian: Signer<'info>,
 
-    #[account(has_one = custodian @ ErrorCode::InvalidCustodian, 
+    #[account(has_one = custodian @ ErrorCode::InvalidCustodian,
         has_one = mint @ ErrorCode::InvalidTokenMint,
     )]
     pub config: Account<'info, Config>,
@@ -43,7 +42,10 @@ pub struct ApproveMintRequestAccounts<'info> {
 
 pub fn handler(ctx: Context<ApproveMintRequestAccounts>) -> Result<()> {
     require!(ctx.accounts.config.mint_enabled, ErrorCode::MintingDisabled);
-    require!(ctx.accounts.config.custodian_enabled, ErrorCode::CustodianDisabled);
+    require!(
+        ctx.accounts.config.custodian_enabled,
+        ErrorCode::CustodianDisabled
+    );
 
     let amount = ctx.accounts.mint_request.amount;
 
@@ -56,7 +58,14 @@ pub fn handler(ctx: Context<ApproveMintRequestAccounts>) -> Result<()> {
     };
 
     msg!("before mint");
-    mint_to(CpiContext::new_with_signer(ctx.accounts.token_program.to_account_info(), cpi_accounts, &[seeds]), amount)?;
+    mint_to(
+        CpiContext::new_with_signer(
+            ctx.accounts.token_program.to_account_info(),
+            cpi_accounts,
+            &[seeds],
+        ),
+        amount,
+    )?;
     msg!("after mint");
     emit!(MintEvent::create(
         &ctx.accounts.mint_request,

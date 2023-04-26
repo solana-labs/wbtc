@@ -1,4 +1,4 @@
-use anchor_lang::{prelude::*};
+use anchor_lang::prelude::*;
 
 use crate::constants::MERCHANT_SEED_PREFIX;
 use crate::error::ErrorCode;
@@ -14,7 +14,7 @@ pub struct CreateMerchantAccounts<'info> {
     #[account(has_one = merchant_authority @ ErrorCode::InvalidAuthority)]
     pub config: Account<'info, Config>,
 
-    #[account(init, 
+    #[account(init,
         seeds = [ MERCHANT_SEED_PREFIX.as_ref(), args.merchant.as_ref()],
         space = 8 + Merchant::LEN,
         bump,

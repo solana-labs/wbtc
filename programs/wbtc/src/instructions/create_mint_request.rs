@@ -3,7 +3,7 @@ use anchor_spl::token::TokenAccount;
 
 use crate::constants::MINT_REQUEST_SEED_PREFIX;
 use crate::error::ErrorCode;
-use crate::events::{MintEvent, EventKind};
+use crate::events::{EventKind, MintEvent};
 use crate::state::{Config, Merchant, MintRequest};
 use crate::utils::validate_btc_transaction;
 
@@ -16,7 +16,7 @@ pub struct CreateMintRequestAccounts<'info> {
     #[account(has_one = authority @ ErrorCode::InvalidMerchantAuthority)]
     pub merchant_info: Account<'info, Merchant>,
 
-    #[account(init, 
+    #[account(init,
         seeds = [ MINT_REQUEST_SEED_PREFIX.as_ref(), config.mint_req_counter.to_le_bytes().as_ref()],
         space = 8 + MintRequest::LEN,
         bump,
@@ -48,7 +48,6 @@ pub fn handler(ctx: Context<CreateMintRequestAccounts>, args: CreateMintRequestA
     require!(merchant.enabled, ErrorCode::MerchantDisabled);
 
     validate_btc_transaction(&args.transaction_id)?;
-    
 
     mint_request.merchant = merchant.key();
     mint_request.amount = args.amount;
@@ -58,7 +57,11 @@ pub fn handler(ctx: Context<CreateMintRequestAccounts>, args: CreateMintRequestA
 
     config.mint_req_counter = config.mint_req_counter.checked_add(1).unwrap();
 
-    emit!(MintEvent::create(mint_request, merchant, EventKind::Created)?);
+    emit!(MintEvent::create(
+        mint_request,
+        merchant,
+        EventKind::Created
+    )?);
 
     Ok(())
 }
