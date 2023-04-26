@@ -1,0 +1,31 @@
+[features]
+seeds = true
+skip-lint = false
+
+[programs.localnet]
+wbtc = "5t659YCpvc9cSMNtZxDY9tpa3WArKpwe1eqPBKBaa8Rx"
+
+[programs.devnet]
+wbtc = "5t659YCpvc9cSMNtZxDY9tpa3WArKpwe1eqPBKBaa8Rx"
+
+[programs.mainnet]
+wbtc = "5t659YCpvc9cSMNtZxDY9tpa3WArKpwe1eqPBKBaa8Rx"
+
+[test.validator]
+url = "https://api.mainnet-beta.solana.com"
+
+
+[[test.validator.clone]]
+address = "BASEDWVF6xeXTJSrk99cbMCwGFtaUvFLihpg6ki9UWX3"
+[[test.validator.clone]]
+address = "metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s"
+
+[registry]
+url = "https://api.apr.dev"
+
+[provider]
+cluster = "localnet"
+wallet = "~/.config/solana/id.json"
+
+[scripts]
+test = "yarn run ts-mocha -p ./tsconfig.json -t 1000000 tests/**/*.ts"
