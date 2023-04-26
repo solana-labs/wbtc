@@ -1,0 +1,28 @@
+[package]
+name = "wbtc"
+version = "0.1.0"
+description = "wBTC wrapping contract"
+edition = "2021"
+maintainers = ["Solana Maintainers <maintainers@solana.foundation>"]
+license = "Apache-2.0"
+
+[lib]
+crate-type = ["cdylib", "lib"]
+name = "wbtc"
+
+[features]
+no-entrypoint = []
+no-idl = []
+no-log-ix-name = []
+cpi = ["no-entrypoint"]
+default = []
+devnet = []
+mainnet-beta = []
+client = []
+localnet = []
+
+[dependencies]
+anchor-lang = "0.27.0"
+anchor-spl = { version = "0.27.0", features = [ "token" ] }
+mpl-token-metadata = { version = "1.9.0", features = [ "no-entrypoint" ] }
+static_assertions = "1.1.0"
