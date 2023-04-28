@@ -1,14 +1,32 @@
-import { AnchorProvider, BN } from "@coral-xyz/anchor";
+import { BN } from "@coral-xyz/anchor";
 import { PublicKey } from "@solana/web3.js";
-//import { PerpetualsClient, PositionSide } from "./client";
 import { Command } from "commander";
 import { WbtcClient } from "./client";
 import { homedir } from "os";
-import { createAssociatedTokenAccount } from "@solana/spl-token";
+
+const DEVNET_URL = "https://api.devnet.solana.com";
 
 let client;
+let isDevnet = false;
+
+function printSquadsLinkFromTransaction(
+  transaction: string,
+  multisigAddress: PublicKey
+) {
+  let address = "https://v3.squads.so/transactions/";
+
+  if (isDevnet) address = "https://devnet.squads.so/transactions/";
+
+  let multisigB64 = Buffer.from(multisigAddress.toString(), "ascii").toString(
+    "base64"
+  ); // base64.encode(multisigAddress.toString());
+  address = address + multisigB64 + "/tx/" + transaction;
+
+  console.log("Created squads transaction: ", address);
+}
 
 function initClient(clusterUrl: string, adminKeyPath: string) {
+  isDevnet = clusterUrl === "https://api.devnet.solana.com";
   console.log("Path='", adminKeyPath, "'");
   process.env["ANCHOR_WALLET"] = adminKeyPath;
   client = new WbtcClient(clusterUrl, adminKeyPath);
@@ -43,7 +61,6 @@ async function createMintRequest(
 }
 
 async function createRedeemRequest(tokenSource: PublicKey, amount: BN) {
-  //var cfgKey = await client.getConfigKey();
   var cfg = await client.getConfig();
 
   return await client.createRedeemRequest(tokenSource, amount);
@@ -52,25 +69,19 @@ async function createRedeemRequest(tokenSource: PublicKey, amount: BN) {
 async function createMerchant(
   merchant: PublicKey,
   merchantBtcAddress: string,
-  multisig?: PublicKey,
-  approve?: boolean
+  multisig: PublicKey
 ) {
   console.log("msig: ", multisig);
-  if (multisig === undefined) {
-    var tx = await client.createMerchant(merchant, merchantBtcAddress);
-    console.log("Created merchant, transaction hash: ", tx);
-  } else {
-    if (approve === undefined) approve = true;
-    console.log("Creating merchant using squads multisig transactions...");
-    var acc = await client.createMerchantWithSquads(
-      merchant,
-      merchantBtcAddress,
-      multisig,
-      approve
-    );
 
-    console.log("Created squads transaction, pk:", acc);
-  }
+  console.log("Creating merchant using squads multisig transactions...");
+  let squadsTx = await client.createMerchantWithSquads(
+    merchant,
+    merchantBtcAddress,
+    multisig,
+    true
+  );
+
+  printSquadsLinkFromTransaction(squadsTx, multisig);
 }
 
 async function viewMerchant(merchant: PublicKey) {
@@ -87,28 +98,15 @@ async function viewMerchantFromWallet(wallet: PublicKey) {
   return await viewMerchant(merchant);
 }
 
-async function deleteMerchant(
-  merchant: PublicKey,
-  multisig?: PublicKey,
-  approve?: boolean
-) {
-  console.log("msig: ", multisig);
-  if (multisig === undefined) {
-    var tx = await client.deleteMerchant(merchant);
-    console.log("Created merchant, transaction hash: ", tx);
-  } else {
-    if (approve === undefined) approve = true;
-    console.log("Creating merchant using squads multisig transactions...");
-    var acc = await client.deleteMerchantWithSquads(
-      merchant,
-      multisig,
-      approve
-    );
+async function deleteMerchant(merchant: PublicKey, multisig: PublicKey) {
+  console.log("Creating merchant using squads multisig transactions...");
+  let squadsTx = await client.deleteMerchantWithSquads(
+    merchant,
+    multisig,
+    true
+  );
 
-    console.log("Created squads transaction, pk:", acc);
-  }
-  var tx = await client.deleteMerchant(merchant);
-  console.log("Deleted merchant, transaction hash: ", tx);
+  printSquadsLinkFromTransaction(squadsTx, multisig);
 }
 
 async function viewConfig() {
@@ -164,22 +162,28 @@ async function toggleMerchantEnabled(
   merchant: PublicKey,
   multisig?: PublicKey
 ) {
-  return await client.toggleMerchantEnabledWithSquads(merchant, multisig, true);
+  let squadsTx = await client.toggleMerchantEnabledWithSquads(
+    merchant,
+    multisig,
+    true
+  );
+  printSquadsLinkFromTransaction(squadsTx, multisig);
 }
 
 async function toggleFunctionality(
-  custodian,
-  mint,
-  redeem,
-  multisig?: PublicKey
+  custodian: boolean,
+  mint: boolean,
+  redeem: boolean,
+  multisig: PublicKey
 ) {
-  return await client.toggleFunctionalityEnabledWithSquads(
+  let squadsTx = await client.toggleFunctionalityEnabledWithSquads(
     custodian,
     mint,
     redeem,
     multisig,
     true
   );
+  printSquadsLinkFromTransaction(squadsTx, multisig);
 }
 
 async function setCustodian(newCustodian: PublicKey) {
@@ -190,22 +194,33 @@ async function setCustodianWithMultisig(
   newCustodian: PublicKey,
   multisig: PublicKey
 ) {
-  return await client.setCustodianWithSquads(newCustodian, multisig, true);
+  let squadsTx = await client.setCustodianWithSquads(
+    newCustodian,
+    multisig,
+    true
+  );
+  printSquadsLinkFromTransaction(squadsTx, multisig);
 }
 
 async function setAuthority(newAuthority: PublicKey, multisig: PublicKey) {
-  return await client.setAuthorityWithSquads(newAuthority, multisig, true);
+  let squadsTx = await client.setAuthorityWithSquads(
+    newAuthority,
+    multisig,
+    true
+  );
+  printSquadsLinkFromTransaction(squadsTx, multisig);
 }
 
 async function setMerchantAuthority(
   newAuthority: PublicKey,
   multisig: PublicKey
 ) {
-  return await client.setMerchantAuthorityWithSquads(
+  let squadsTx = await client.setMerchantAuthorityWithSquads(
     newAuthority,
     multisig,
     true
   );
+  printSquadsLinkFromTransaction(squadsTx, multisig);
 }
 
 async function approveMintRequest(id: BN) {
@@ -230,14 +245,10 @@ async function approveRedeemRequest(id: BN, tx: string) {
     .name("cli.ts")
     .description("CLI to Solana Perpetuals Exchange Program")
     .version("0.1.0")
-    .option(
-      "-u, --url <string>",
-      "URL for Solana's JSON RPC",
-      "https://api.devnet.solana.com"
-    )
+    .option("-u, --url <string>", "URL for Solana's JSON RPC", DEVNET_URL)
     .option(
       "-k, --keypair <path>",
-      "Filepath to the admin keypair (default: ~/.config/solana/id.json)",
+      "Filepath to the user keypair",
       homedir() + "/.config/solana/id.json"
     )
     .hook("preSubcommand", (thisCommand, subCommand) => {
@@ -251,21 +262,26 @@ async function approveRedeemRequest(id: BN, tx: string) {
 
   program
     .command("init")
-    .description("Initialize the on-chain program")
-    .requiredOption("-a, --authority <pubkey>", "authority address")
+    .description(
+      "Initialize the on-chain program. Can ONLY be executed by the contract upgrade authority."
+    )
+    .requiredOption(
+      "-a, --authority <pubkey>",
+      "Authority address (big DAO). NOTE: THIS IS THE SIGNING AUTHORITY FROM THE SQUADS MULTISIG."
+    )
     .requiredOption(
       "-b, --custodian-btc-address <string>",
-      "custodian btc address"
+      "Custodian btc address."
     )
-    .requiredOption("-c, --custodian <pubkey>", "custodian address")
-    .requiredOption("-d, --decimals <int>", "decimals for the token mint")
+    .requiredOption("-c, --custodian <pubkey>", "Custodian wallet address.")
+    .requiredOption("-d, --decimals <int>", "Decimals for the token mint.")
     .requiredOption(
       "-m, --merchant-authority <pubkey>",
-      "merchant authority address"
+      "Merchant authority address (small DAO). NOTE: THIS IS THE SIGNING AUTHORITY FROM THE SQUADS MULTISIG."
     )
-    .requiredOption("-n, --name <string>", "Token name")
-    .requiredOption("-s, --symbol <string>", "Token symbol")
-    .requiredOption("-t, --uri <string>", "Token metadata uri")
+    .requiredOption("-n, --name <string>", "Token name.")
+    .requiredOption("-s, --symbol <string>", "Token symbol.")
+    .requiredOption("-t, --uri <string>", "Token metadata uri.")
     .action(async (options) => {
       console.log(options);
       await initialize(options);
@@ -322,7 +338,9 @@ async function approveRedeemRequest(id: BN, tx: string) {
 
   program
     .command("create-mint-request")
-    .description("Creates a mint request")
+    .description(
+      "Creates a mint request. Can only be executed by an authorised merchant."
+    )
     .argument("<Pubkey>", "The client wallet to receive the wrapped tokens")
     .argument("<string>", "The transaction of btc into the custodian")
     .argument("<number>", "The amount of tokens to mint")
@@ -332,7 +350,9 @@ async function approveRedeemRequest(id: BN, tx: string) {
 
   program
     .command("create-redeem-request")
-    .description("Creates a redeem request")
+    .description(
+      "Creates a redeem request. Can only be executed by an authorised merchant."
+    )
     .argument("<Pubkey>", "The token account to redeem from")
     .argument("<number>", "The amount of tokens to redeem")
     .action(async (pk, amount) => {
@@ -341,59 +361,45 @@ async function approveRedeemRequest(id: BN, tx: string) {
 
   program
     .command("create-merchant")
-    .description("Creates a merchant")
+    .description(
+      "Creates a merchant. Must be executed by a small DAO member. This will create a Squads transaction that should be"
+    )
     .argument("<pubkey>", "The merchant wallet public key")
     .argument("<btc address>", "The merchant btc address")
-    .option("-m, --multisig <pubkey>", "The multisig account address ")
-    .option(
-      "-N, --no--approve",
-      "Don't auto approve transaction after creation"
-    )
-    .action(async (pk, btcAddress, opts) => {
-      console.log("pk ", pk);
-      console.log("btcAddress ", btcAddress);
-      console.log("opts ", opts);
-      if (opts.multisig) {
-        await createMerchant(
-          new PublicKey(pk),
-          btcAddress,
-          new PublicKey(opts.multisig)
-        );
-      } else {
-        await createMerchant(new PublicKey(pk), btcAddress);
-      }
+    .argument("<pubkey>", "The multisig account address (small DAO)")
+    .action(async (pk, btcAddress, multisig) => {
+      await createMerchant(
+        new PublicKey(pk),
+        btcAddress,
+        new PublicKey(multisig)
+      );
     });
 
   program
     .command("toggle-enable-merchant")
-    .description("Toggles a merchant enabled or disabled")
+    .description(
+      "Toggles a merchant enabled or disabled.  Must be executed by a small DAO member."
+    )
     .argument("<pubkey>", "The merchant wallet public key")
+    .argument("<pubkey>", "The multisig account address (small DAO)")
     .option(
       "-i",
       "Fetch the merchant directly instead of deriving from wallet address."
     )
-    .option("-m, --multisig <pubkey>", "The multisig account address ")
-    .option(
-      "-N, --no--approve",
-      "Don't auto approve transaction after creation"
-    )
-    .action(async (pk, opts) => {
+    .action(async (pk, multisig, opts) => {
       let merchant;
       if (opts.i) {
         merchant = client.getMerchantKey(new PublicKey(pk));
       } else {
         merchant = new PublicKey(pk);
       }
-      if (opts.multisig) {
-        await toggleMerchantEnabled(merchant, new PublicKey(opts.multisig));
-      } else {
-        await toggleMerchantEnabled(merchant);
-      }
+      await toggleMerchantEnabled(merchant, new PublicKey(multisig));
     });
 
   program
     .command("toggle-functionality")
     .description("Toggles a functionality enabled or disabled")
+    .argument("<pubkey>", "The multisig account address (big DAO)")
     .option(
       "-c, --custodian",
       "Toggles the functionality flag for the custodian"
@@ -401,12 +407,7 @@ async function approveRedeemRequest(id: BN, tx: string) {
     .option("-t, --mint", "Toggles the functionality flag for minting")
     .option("-r, --redeem", "Toggles the functionality flag for redeeming")
 
-    .option("-m, --multisig <pubkey>", "The multisig account address ")
-    .option(
-      "-N, --no--approve",
-      "Don't auto approve transaction after creation"
-    )
-    .action(async (opts) => {
+    .action(async (multisig, opts) => {
       let mint = null,
         redeem = null,
         custodian = null;
@@ -415,35 +416,21 @@ async function approveRedeemRequest(id: BN, tx: string) {
       if (opts.redeem) redeem = true;
       if (opts.mint) mint = true;
 
-      if (opts.multisig) {
-        await toggleFunctionality(
-          custodian,
-          mint,
-          redeem,
-          new PublicKey(opts.multisig)
-        );
-      } else {
-        await toggleFunctionality(custodian, mint, redeem);
-      }
+      await toggleFunctionality(
+        custodian,
+        mint,
+        redeem,
+        new PublicKey(multisig)
+      );
     });
 
   program
     .command("delete-merchant")
     .description("Deletes a merchant")
     .argument("<pubkey>", "The merchant wallet public key")
-    .option("-m, --multisig <pubkey>", "The multisig account address ")
-    .option(
-      "-N, --no--approve",
-      "Don't auto approve transaction after creation"
-    )
-    .action(async (pk, opts) => {
-      console.log("pk ", pk);
-      console.log("opts ", opts);
-      if (opts.multisig) {
-        await deleteMerchant(new PublicKey(pk), new PublicKey(opts.multisig));
-      } else {
-        await deleteMerchant(new PublicKey(pk));
-      }
+    .argument("<pubkey>", "The multisig account address (small DAO)")
+    .action(async (pk, multisig) => {
+      await deleteMerchant(new PublicKey(pk), new PublicKey(multisig));
     });
 
   program
