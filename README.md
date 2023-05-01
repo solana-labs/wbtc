@@ -10,8 +10,11 @@ This program will have two main authorities: the `authority` is capable of chang
 Devnet
 
 program - 5t659YCpvc9cSMNtZxDY9tpa3WArKpwe1eqPBKBaa8Rx
+
 mint - 7skMX8xAbowPpeahc4Zipgcv3cUbT88Jspz8gfeH8s6D
+
 small dao - 49kUge8LHR6FoYEQqE7fq8UkZTE3ouLDeFeH8NmaxKBN
+
 big dao - BoY4qapYaJpHrbpPDmhRpMwzMTWgYJhx3ZYkViEDYLts
 
 # State

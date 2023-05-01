@@ -9,41 +9,15 @@ import {
   Wallet,
 } from "@coral-xyz/anchor";
 import { Wbtc } from "../../target/types/wbtc";
-import {
-  PublicKey,
-  TransactionInstruction,
-  Transaction,
-  SystemProgram,
-  AccountMeta,
-  Keypair,
-  SYSVAR_RENT_PUBKEY,
-  sendAndConfirmTransaction,
-  Connection,
-} from "@solana/web3.js";
-import {
-  getAccount,
-  getAssociatedTokenAddress,
-  createAssociatedTokenAccountInstruction,
-  createCloseAccountInstruction,
-  createSyncNativeInstruction,
-  TOKEN_PROGRAM_ID,
-  createAssociatedTokenAccount,
-  createAssociatedTokenAccountIdempotent,
-} from "@solana/spl-token";
-import fetch from "node-fetch";
-import { sha256 } from "js-sha256";
-import { encode } from "bs58";
+import { PublicKey, Keypair } from "@solana/web3.js";
+import { createAssociatedTokenAccount } from "@solana/spl-token";
 import { readFileSync } from "fs";
-import Squads, {
-  DEFAULT_MULTISIG_PROGRAM_ID,
-  getAuthorityPDA,
-} from "@sqds/sdk";
+import Squads from "@sqds/sdk";
 
 import {
   InstructionAccountAddresses,
   TypeDef,
 } from "@coral-xyz/anchor/dist/cjs/program/namespace/types";
-import { TransactionBuilder } from "@sqds/sdk/lib/sdk/src/tx_builder";
 
 export type Config = TypeDef<Wbtc["accounts"][0], Wbtc>;
 export type Merchant = TypeDef<Wbtc["accounts"][1], Wbtc>;
@@ -261,7 +235,7 @@ export class WbtcClient {
     console.log("Squads transaction: ", msTx.publicKey);
     console.log("Squads instruction: ", msIx.publicKey);
 
-    return msIx.publicKey;
+    return msTx.publicKey;
   }
 
   async deleteMerchantWithSquads(
@@ -290,7 +264,7 @@ export class WbtcClient {
     console.log("Squads transaction: ", msTx.publicKey);
     console.log("Squads instruction: ", msIx.publicKey);
 
-    return msIx.publicKey;
+    return msTx.publicKey;
   }
 
   async deleteMerchant(merchant: PublicKey): Promise<string> {
@@ -317,7 +291,7 @@ export class WbtcClient {
   async createTokenAccount(owner: PublicKey): Promise<PublicKey> {
     let config = await this.getConfig();
 
-    let clientTokenAccount = await createAssociatedTokenAccountIdempotent(
+    let clientTokenAccount = await createAssociatedTokenAccount(
       this.provider.connection,
       this.admin,
       config.mint,
@@ -469,13 +443,11 @@ export class WbtcClient {
 
     const msTx = await this.squads.createTransaction(multisigAddress, 1);
 
-    const ixBuilder = this.program.methods
-      .setAuthority()
-      .accounts({
-        config: this.configKey,
-        newAuthority,
-        authority: cfg.authority,
-      });
+    const ixBuilder = this.program.methods.setAuthority().accounts({
+      config: this.configKey,
+      newAuthority,
+      authority: cfg.authority,
+    });
 
     const msIx = await this.squads.addInstruction(
       msTx.publicKey,
@@ -489,7 +461,7 @@ export class WbtcClient {
     console.log("Squads transaction: ", msTx.publicKey);
     console.log("Squads instruction: ", msIx.publicKey);
 
-    return msIx.publicKey;
+    return msTx.publicKey;
   }
 
   async setMerchantAuthority(newMerchantAuthority: PublicKey): Promise<string> {
@@ -508,13 +480,11 @@ export class WbtcClient {
 
     const msTx = await this.squads.createTransaction(multisigAddress, 1);
 
-    const ixBuilder = this.program.methods
-      .setMerchantAuthority()
-      .accounts({
-        config: this.configKey,
-        newMerchantAuthority,
-        authority: cfg.authority,
-      });
+    const ixBuilder = this.program.methods.setMerchantAuthority().accounts({
+      config: this.configKey,
+      newMerchantAuthority,
+      authority: cfg.authority,
+    });
 
     const msIx = await this.squads.addInstruction(
       msTx.publicKey,
@@ -528,7 +498,7 @@ export class WbtcClient {
     console.log("Squads transaction: ", msTx.publicKey);
     console.log("Squads instruction: ", msIx.publicKey);
 
-    return msIx.publicKey;
+    return msTx.publicKey;
   }
 
   async setCustodian(newCustodian: PublicKey): Promise<string> {
@@ -547,13 +517,11 @@ export class WbtcClient {
 
     const msTx = await this.squads.createTransaction(multisigAddress, 1);
 
-    const ixBuilder = this.program.methods
-      .setCustodian()
-      .accounts({
-        config: this.configKey,
-        newCustodian,
-        authority: cfg.authority,
-      });
+    const ixBuilder = this.program.methods.setCustodian().accounts({
+      config: this.configKey,
+      newCustodian,
+      authority: cfg.authority,
+    });
 
     const msIx = await this.squads.addInstruction(
       msTx.publicKey,
@@ -567,7 +535,7 @@ export class WbtcClient {
     console.log("Squads transaction: ", msTx.publicKey);
     console.log("Squads instruction: ", msIx.publicKey);
 
-    return msIx.publicKey;
+    return msTx.publicKey;
   }
 
   async setCustodianBtcAddress(newBtcAddress: string): Promise<string> {
@@ -601,13 +569,11 @@ export class WbtcClient {
 
     const msTx = await this.squads.createTransaction(multisigAddress, 1);
 
-    const ixBuilder = this.program.methods
-      .toggleMerchantEnabled()
-      .accounts({
-        config: this.configKey,
-        merchant,
-        merchantAuthority: cfg.merchantAuthority,
-      });
+    const ixBuilder = this.program.methods.toggleMerchantEnabled().accounts({
+      config: this.configKey,
+      merchant,
+      merchantAuthority: cfg.merchantAuthority,
+    });
 
     const msIx = await this.squads.addInstruction(
       msTx.publicKey,
@@ -623,7 +589,7 @@ export class WbtcClient {
 
     //const exec = await this.squads.executeTransaction(msTx.publicKey);
 
-    return msIx.publicKey;
+    return msTx.publicKey;
   }
 
   async toggleFunctionalityEnabled(
@@ -674,6 +640,6 @@ export class WbtcClient {
     console.log("Squads transaction: ", msTx.publicKey);
     console.log("Squads instruction: ", msIx.publicKey);
 
-    return msIx.publicKey;
+    return msTx.publicKey;
   }
 }
