@@ -15,6 +15,10 @@ pub fn validate_btc_address(address: &String) -> Result<()> {
         address.len() >= BTC_ADDRESS_MIN_LEN,
         ErrorCode::AddressTooShort
     );
+    require!(
+        address.chars().all(|c| c.is_ascii_alphanumeric()),
+        ErrorCode::InvalidAddressCharacters
+    );
     Ok(())
 }
 
@@ -23,6 +27,11 @@ pub fn validate_btc_transaction(transaction: &String) -> Result<()> {
     require!(
         transaction.len() == BTC_TRANSACTION_LEN,
         ErrorCode::InvalidTransactionLength
+    );
+
+    require!(
+        transaction.chars().all(|c| c.is_ascii_alphanumeric()),
+        ErrorCode::InvalidTransactionCharacters
     );
     Ok(())
 }

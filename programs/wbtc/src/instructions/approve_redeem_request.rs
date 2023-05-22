@@ -24,7 +24,7 @@ pub struct ApproveRedeemRequestAccounts<'info> {
     pub merchant: Account<'info, Merchant>,
 
     #[account(mut,
-        close = merchant,
+        close = merchant_authority,
         has_one = merchant,
     )]
     pub redeem_request: Account<'info, RedeemRequest>,

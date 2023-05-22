@@ -5,6 +5,7 @@ static_assertions::const_assert!(Config::LEN > std::mem::size_of::<Config>());
 #[derive(Debug)]
 pub struct Config {
     pub authority: Pubkey,
+    pub new_authority: Pubkey,
     pub merchant_authority: Pubkey,
     pub custodian: Pubkey,
     pub custodian_btc_address: String,

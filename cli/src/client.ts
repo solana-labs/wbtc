@@ -10,7 +10,7 @@ import {
 } from "@coral-xyz/anchor";
 import { Wbtc } from "../../target/types/wbtc";
 import { PublicKey, Keypair } from "@solana/web3.js";
-import { createAssociatedTokenAccount } from "@solana/spl-token";
+import { createAssociatedTokenAccount, getOrCreateAssociatedTokenAccount } from "@solana/spl-token";
 import { readFileSync } from "fs";
 import Squads from "@sqds/sdk";
 
@@ -196,6 +196,43 @@ export class WbtcClient {
       .rpc();
   }
 
+  async claimAuthority(): Promise<string> {
+    return await this.program.methods
+      .claimAuthority()
+      .accounts({ config: this.configKey })
+      .rpc();
+  }
+
+  async claimAuthorityWithSquads(
+    multisigAddress: PublicKey,
+    approve: boolean
+    ): Promise<PublicKey> {
+      const cfg = await this.getConfig();
+  
+      const msTx = await this.squads.createTransaction(multisigAddress, 1);
+  
+      const ixBuilder = this.program.methods
+        .claimAuthority()
+        .accounts({
+          config: this.configKey,
+          newAuthority: cfg.newAuthority,
+        });
+  
+      const msIx = await this.squads.addInstruction(
+        msTx.publicKey,
+        await ixBuilder.instruction()
+      );
+  
+      const fin = await this.squads.activateTransaction(msTx.publicKey);
+  
+      if (approve) await this.squads.approveTransaction(msTx.publicKey);
+  
+      console.log("Squads transaction: ", msTx.publicKey);
+      console.log("Squads instruction: ", msIx.publicKey);
+  
+      return msTx.publicKey;
+  }
+
   async createMerchant(
     merchant: PublicKey,
     merchantBtcAddress: string
@@ -288,17 +325,17 @@ export class WbtcClient {
     return keys as CreateMerchantKeys;
   }
 
-  async createTokenAccount(owner: PublicKey): Promise<PublicKey> {
+  async getOrCreateTokenAccount(owner: PublicKey): Promise<PublicKey> {
     let config = await this.getConfig();
 
-    let clientTokenAccount = await createAssociatedTokenAccount(
+    let clientTokenAccount = await getOrCreateAssociatedTokenAccount(
       this.provider.connection,
       this.admin,
       config.mint,
       owner
     );
 
-    return clientTokenAccount;
+    return clientTokenAccount.address;
   }
 
   async createRedeemRequest(

@@ -3,13 +3,13 @@ seeds = true
 skip-lint = false
 
 [programs.localnet]
-wbtc = "5t659YCpvc9cSMNtZxDY9tpa3WArKpwe1eqPBKBaa8Rx"
+wbtc = "Fwc8BsPm6ktThT49CmcpXUpG5MhBTTnvUyRo4yTdEFDk"
 
 [programs.devnet]
-wbtc = "5t659YCpvc9cSMNtZxDY9tpa3WArKpwe1eqPBKBaa8Rx"
+wbtc = "Fwc8BsPm6ktThT49CmcpXUpG5MhBTTnvUyRo4yTdEFDk"
 
 [programs.mainnet]
-wbtc = "5t659YCpvc9cSMNtZxDY9tpa3WArKpwe1eqPBKBaa8Rx"
+wbtc = "Fwc8BsPm6ktThT49CmcpXUpG5MhBTTnvUyRo4yTdEFDk"
 
 [test.validator]
 url = "https://api.mainnet-beta.solana.com"

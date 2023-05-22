@@ -52,7 +52,7 @@ async function createMintRequest(
   transaction: string
 ) {
   console.log(clientWallet);
-  let ta = await client.createTokenAccount(clientWallet);
+  let ta = await client.getOrCreateTokenAccount(clientWallet);
 
   let res = await client.createMintRequest(ta, amount, transaction);
 
@@ -115,6 +115,7 @@ async function viewConfig() {
 
   console.log("Config - ", cfgKey);
   console.log(" authority: ", cfg.authority);
+  console.log(" new_authority: ", cfg.newAuthority);
   console.log(" merchant_authority: ", cfg.merchantAuthority);
   console.log(" custodian: ", cfg.custodian);
   console.log(" custodianBtcAddress: ", cfg.custodianBtcAddress);
@@ -205,6 +206,14 @@ async function setCustodianWithMultisig(
 async function setAuthority(newAuthority: PublicKey, multisig: PublicKey) {
   let squadsTx = await client.setAuthorityWithSquads(
     newAuthority,
+    multisig,
+    true
+  );
+  printSquadsLinkFromTransaction(squadsTx, multisig);
+}
+
+async function claimAuthority(multisig: PublicKey) {
+  let squadsTx = await client.claimAuthorityWithSquads(
     multisig,
     true
   );
@@ -443,6 +452,14 @@ async function approveRedeemRequest(id: BN, tx: string) {
     });
 
   program
+    .command("claim-authority")
+    .description("Claims the new authority (big DAO)")
+    .argument("<pubkey>", "The new multisig address (big DAO)")
+    .action(async (msig) => {
+      await claimAuthority(new PublicKey(msig));
+    });
+
+  program
     .command("set-merchant-authority")
     .description("Changes the current merchant authority (small DAO)")
     .argument("<pubkey>", "The new authority address")
@@ -457,16 +474,12 @@ async function approveRedeemRequest(id: BN, tx: string) {
       "Changes the current custodian address, either from the current custodian wallet or from the big DAO authority"
     )
     .argument("<pubkey>", "The new custodian wallet address")
-    .option("-m, --multisig <pubkey>", "The multisig address (big DAO)")
-    .action(async (auth, opts) => {
-      if (opts.multisig) {
+    .argument("<pubkey>", "The multisig address (big DAO)")
+    .action(async (auth, msig) => {
         await setCustodianWithMultisig(
           new PublicKey(auth),
-          new PublicKey(opts.multisig)
+          new PublicKey(msig)
         );
-      } else {
-        await setCustodian(new PublicKey(auth));
-      }
     });
 
   program

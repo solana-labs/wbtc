@@ -160,6 +160,12 @@ describe("wbtc", () => {
       })
       .accounts({ metadata, tokenMetadataProgram: TOKEN_METADATA_PROGRAM })
       .rpcAndKeys();
+
+    await program.methods
+      .claimAuthority()
+      .accounts({ config, newAuthority: authority.publicKey })
+      .signers([authority])
+      .rpc();
   });
 
   it("creates merchant", async () => {
@@ -307,6 +313,24 @@ describe("wbtc", () => {
       assert.strictEqual(e.error.errorCode.code, "InvalidTransactionLength");
     }
 
+    try {
+      const mintReq = await program.methods
+        .createMintRequest({
+          amount: new BN(100000),
+          transactionId: "!2e62d55f27d033ca8e5e296f1637517fdec92e48b51eb7eb64a9beb500a88bb",
+        })
+        .accounts({
+          config,
+          merchantInfo,
+          authority: merchant.publicKey,
+          clientTokenAccount,
+        })
+        .signers([merchant])
+        .rpc();
+    } catch (e) {
+      assert.strictEqual(e.error.errorCode.code, "InvalidTransactionCharacters");
+    }
+
     const mintReq = await program.methods
       .createMintRequest({
         amount: new BN(100000),
@@ -445,8 +469,6 @@ describe("wbtc", () => {
 
     let mintReq = res.pubkeys.mintRequest;
 
-    console.log("blah");
-
     console.log("custodian: ", custodian.publicKey.toString());
     console.log("mintReq: ", mintReq.toString());
     console.log("merchantInfo: ", merchantInfo.toString());
@@ -479,7 +501,6 @@ describe("wbtc", () => {
       .accounts({ config, authority: authority.publicKey })
       .signers([authority])
       .rpc();
-    console.log(" blah 2");
 
     await assertInvalidTransaction(
       program.methods
@@ -551,8 +572,6 @@ describe("wbtc", () => {
 
     let mintReq = res.pubkeys.mintRequest;
 
-    console.log("blah");
-
     console.log("custodian: ", custodian.publicKey.toString());
     console.log("mintReq: ", mintReq.toString());
     console.log("merchantInfo: ", merchantInfo.toString());
@@ -584,7 +603,6 @@ describe("wbtc", () => {
       .accounts({ config, authority: authority.publicKey })
       .signers([authority])
       .rpc();
-    console.log(" blah 2");
 
     await program.methods
       .rejectMintRequest()

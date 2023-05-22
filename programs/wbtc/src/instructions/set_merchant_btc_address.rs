@@ -15,11 +15,11 @@ pub struct SetMerchantBtcAddressAccounts<'info> {
 
 pub fn handler(
     ctx: Context<SetMerchantBtcAddressAccounts>,
-    new_merchant_btc_addresss: String,
+    new_merchant_btc_address: String,
 ) -> Result<()> {
-    validate_btc_address(&new_merchant_btc_addresss)?;
+    validate_btc_address(&new_merchant_btc_address)?;
 
-    ctx.accounts.merchant.btc_address = new_merchant_btc_addresss;
+    ctx.accounts.merchant.btc_address = new_merchant_btc_address;
 
     Ok(())
 }

@@ -9,9 +9,9 @@ This program will have two main authorities: the `authority` is capable of chang
 
 Devnet
 
-program - 5t659YCpvc9cSMNtZxDY9tpa3WArKpwe1eqPBKBaa8Rx
+program - Fwc8BsPm6ktThT49CmcpXUpG5MhBTTnvUyRo4yTdEFDk
 
-mint - 7skMX8xAbowPpeahc4Zipgcv3cUbT88Jspz8gfeH8s6D
+mint - NgTvvdb9mzPWcpyQL7dmNAoJZXtBEUyqtBvbr5RdzU3
 
 small dao - 49kUge8LHR6FoYEQqE7fq8UkZTE3ouLDeFeH8NmaxKBN
 
@@ -37,6 +37,7 @@ In order to make indexing easier, there are two main events surrouding the main 
 The following instructions either create or set basic functioning paramethers:
 
 * initialize - creates the `Config` account, and the token mint. Sets the two authorities, custodian info and mint decimals.
+* claim_authority - acts as a security buffer after changing the authority, in case of a wrongly typed addresses, the previous authority can call `set_authority` again. On initialize, the previous authority is set as the signer of `initialize`, and should be the calling `set_authority` if unable to call `claim_authority` after `initialize`
 * create_merchant - creates a `Merchant`. Requires the merchant wallet and btc address.
 * delete_merchant - deletes a `Merchant`.
 * set_authority - changes the authority address.
@@ -81,6 +82,7 @@ The following table shows the permissions for calling each instruction:
 | approve_redeem_request       |           |                    |          |     x     |
 |                              |           |                    |          |           |
 | set_authority                |     x     |                    |          |           |
+| claim_authority              |the new one|                    |          |           |
 | set_merchant_authority       |     x     |                    |          |           |
 | set_custodian                |     x     |                    |          |     x     |
 | set_custodian_btc_address    |           |                    |          |     x     |

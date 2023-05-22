@@ -54,6 +54,7 @@ pub fn handler(ctx: Context<CreateMintRequestAccounts>, args: CreateMintRequestA
     mint_request.transaction_id = args.transaction_id;
     mint_request.client_token_account = ctx.accounts.client_token_account.key();
     mint_request.req_id = config.mint_req_counter;
+    mint_request.timestamp = Clock::get()?.unix_timestamp as u64;
 
     config.mint_req_counter = config.mint_req_counter.checked_add(1).unwrap();
 

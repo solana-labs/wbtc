@@ -3,7 +3,6 @@ use anchor_lang::prelude::*;
 use anchor_lang::solana_program::program::invoke_signed;
 use anchor_spl::token::{Mint, Token};
 
-#[cfg(not(feature = "localnet"))]
 use crate::error::ErrorCode;
 #[cfg(not(feature = "localnet"))]
 use crate::program::Wbtc;
@@ -65,7 +64,17 @@ pub fn handler(ctx: Context<InitializeAccounts>, args: InitializeArgs) -> Result
 
     validate_upgrade_authority(ctx.accounts.authority.key(), ctx.remaining_accounts)?;
 
-    cfg.authority = args.authority;
+    require!(
+        ctx.accounts.authority.key() != args.custodian,
+        ErrorCode::InvalidNewCustodian
+    );
+    require!(
+        args.authority != args.custodian,
+        ErrorCode::InvalidNewAuthority
+    );
+
+    cfg.authority = ctx.accounts.authority.key();
+    cfg.new_authority = args.authority;
     cfg.custodian = args.custodian;
     cfg.custodian_btc_address = args.custodian_btc_address;
     cfg.merchant_authority = args.merchant_authority;

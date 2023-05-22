@@ -15,6 +15,10 @@ pub struct SetCustodianAccounts<'info> {
     pub config: Account<'info, Config>,
 
     /// CHECK: nothing to check here, its just the new authority address
+    #[account(
+        constraint = new_custodian.key() != config.authority 
+        && new_custodian.key() != config.new_authority @ ErrorCode::InvalidNewCustodian
+    )]
     pub new_custodian: AccountInfo<'info>,
 }
 
