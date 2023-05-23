@@ -41,4 +41,6 @@ pub enum ErrorCode {
     InvalidNewAuthority,
     #[msg("the new custodian is invalid (collision with authority/new_authority")]
     InvalidNewCustodian,
+    #[msg("the custodian btc deposit address is invalid for the given merchant")]
+    InvalidCustodianBtcAddress,
 }

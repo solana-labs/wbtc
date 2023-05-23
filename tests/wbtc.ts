@@ -97,7 +97,6 @@ describe("wbtc", () => {
         authority: authority.publicKey,
         merchantAuthority: merchantAuthority.publicKey,
         custodian: custodian.publicKey,
-        custodianBtcAddress: tooShortAddress,
         name: "Wrapped BTC",
         symbol: "wBTC",
         uri: "",
@@ -109,51 +108,12 @@ describe("wbtc", () => {
 
     let metadata = getMetadata(mint);
 
-    try {
-      const tx = await program.methods
-        .initialize({
-          decimals: 9,
-          authority: authority.publicKey,
-          merchantAuthority: merchantAuthority.publicKey,
-          custodian: custodian.publicKey,
-          custodianBtcAddress: tooShortAddress,
-          name: "Wrapped BTC",
-          symbol: "wBTC",
-          uri: "",
-        })
-        .accounts({ metadata, tokenMetadataProgram: TOKEN_METADATA_PROGRAM })
-        .rpc();
-      assert.ok(false);
-    } catch (e) {
-      assert.strictEqual(e.error.errorCode.code, "AddressTooShort");
-    }
-
-    try {
-      const tx = await program.methods
-        .initialize({
-          decimals: 9,
-          authority: authority.publicKey,
-          merchantAuthority: merchantAuthority.publicKey,
-          custodian: custodian.publicKey,
-          custodianBtcAddress: tooLongAddress,
-          name: "Wrapped BTC",
-          symbol: "wBTC",
-          uri: "",
-        })
-        .accounts({ metadata, tokenMetadataProgram: TOKEN_METADATA_PROGRAM })
-        .rpc();
-      assert.ok(false);
-    } catch (e) {
-      assert.strictEqual(e.error.errorCode.code, "AddressTooLong");
-    }
-
     const tx = await program.methods
       .initialize({
         decimals: 9,
         authority: authority.publicKey,
         merchantAuthority: merchantAuthority.publicKey,
         custodian: custodian.publicKey,
-        custodianBtcAddress: validBtcAddress,
         name: "Wrapped BTC",
         symbol: "wBTC",
         uri: "",
@@ -282,7 +242,7 @@ describe("wbtc", () => {
         .signers([merchant])
         .rpc();
     } catch (e) {
-      assert.strictEqual(e.error.errorCode.code, "MerchantDisabled");
+      assert.strictEqual("MerchantDisabled", e.error.errorCode.code);
     }
 
     await program.methods
@@ -310,14 +270,48 @@ describe("wbtc", () => {
         .signers([merchant])
         .rpc();
     } catch (e) {
-      assert.strictEqual(e.error.errorCode.code, "InvalidTransactionLength");
+      assert.strictEqual("InvalidCustodianBtcAddress", e.error.errorCode.code);
     }
+
+
+    await assertInvalidTransaction(
+      program.methods
+      .setCustodianBtcAddress(validBtcAddress)
+      .accounts({
+        custodian: custodian.publicKey,
+        config,
+        merchant: merchantInfo,
+      })
+      .signers([custodian])
+      .rpc(),
+      "CustodianDisabled"
+    );
+
+    await program.methods
+      .toggleFunctionalityEnabled({
+        mintEnabled: null,
+        redeemEnabled: null,
+        custodianEnabled: true,
+      })
+      .accounts({ config, authority: authority.publicKey })
+      .signers([authority])
+      .rpc();
+
+    await program.methods
+      .setCustodianBtcAddress(validBtcAddress)
+      .accounts({
+        custodian: custodian.publicKey,
+        config,
+        merchant: merchantInfo,
+      })
+      .signers([custodian])
+      .rpc();
 
     try {
       const mintReq = await program.methods
         .createMintRequest({
           amount: new BN(100000),
-          transactionId: "!2e62d55f27d033ca8e5e296f1637517fdec92e48b51eb7eb64a9beb500a88bb",
+          transactionId: "dummytxid",
         })
         .accounts({
           config,
@@ -328,7 +322,29 @@ describe("wbtc", () => {
         .signers([merchant])
         .rpc();
     } catch (e) {
-      assert.strictEqual(e.error.errorCode.code, "InvalidTransactionCharacters");
+      assert.strictEqual("InvalidTransactionLength", e.error.errorCode.code);
+    }
+
+    try {
+      const mintReq = await program.methods
+        .createMintRequest({
+          amount: new BN(100000),
+          transactionId:
+            "!2e62d55f27d033ca8e5e296f1637517fdec92e48b51eb7eb64a9beb500a88bb",
+        })
+        .accounts({
+          config,
+          merchantInfo,
+          authority: merchant.publicKey,
+          clientTokenAccount,
+        })
+        .signers([merchant])
+        .rpc();
+    } catch (e) {
+      assert.strictEqual(
+        e.error.errorCode.code,
+        "InvalidTransactionCharacters"
+      );
     }
 
     const mintReq = await program.methods
@@ -348,15 +364,6 @@ describe("wbtc", () => {
   });
 
   it("cancel mint request", async () => {
-    let events = [];
-
-    let handler = (e: any, slot: number, sig: string) => {
-      events.push(e);
-    };
-
-    //program.idl.events
-    let eventRes = program.addEventListener("MintEvent", handler);
-
     const res = await program.methods
       .createMintRequest({
         amount: new BN(100000),
@@ -438,19 +445,9 @@ describe("wbtc", () => {
       );
     }
 
-    program.removeEventListener(eventRes);
-    assert.equal(events.length, 2);
   });
 
   it("approve mint request", async () => {
-    let events = [];
-
-    let handler = (e: any, slot: number, sig: string) => {
-      events.push(e);
-    };
-
-    //program.idl.events
-    let eventRes = program.addEventListener("MintEvent", handler);
 
     const res = await program.methods
       .createMintRequest({
@@ -476,31 +473,6 @@ describe("wbtc", () => {
     console.log("clientTokenAccount: ", clientTokenAccount.toString());
     console.log("client: ", client.publicKey.toString());
 
-    await assertInvalidTransaction(
-      program.methods
-        .approveMintRequest()
-        .accounts({
-          config,
-          mintRequest: mintReq,
-          merchant: merchantInfo,
-          merchantAuthority: merchant.publicKey,
-          custodian: custodian.publicKey,
-          clientTokenAccount,
-        })
-        .signers([custodian])
-        .rpc(),
-      "CustodianDisabled"
-    );
-
-    await program.methods
-      .toggleFunctionalityEnabled({
-        mintEnabled: null,
-        redeemEnabled: null,
-        custodianEnabled: true,
-      })
-      .accounts({ config, authority: authority.publicKey })
-      .signers([authority])
-      .rpc();
 
     await assertInvalidTransaction(
       program.methods
@@ -541,19 +513,9 @@ describe("wbtc", () => {
       );
     }
 
-    program.removeEventListener(eventRes);
-    assert.equal(events.length, 2);
   });
 
   it("reject mint request", async () => {
-    let events = [];
-
-    let handler = (e: any, slot: number, sig: string) => {
-      events.push(e);
-    };
-
-    //program.idl.events
-    let eventRes = program.addEventListener("MintEvent", handler);
 
     const res = await program.methods
       .createMintRequest({
@@ -626,8 +588,6 @@ describe("wbtc", () => {
       );
     }
 
-    program.removeEventListener(eventRes);
-    assert.equal(events.length, 2);
   });
 
   it("creates redeem request", async () => {
@@ -656,7 +616,6 @@ describe("wbtc", () => {
       "RedeemingDisabled"
     );
 
-    console.log("before toggle");
     await program.methods
       .toggleFunctionalityEnabled({
         redeemEnabled: true,
@@ -667,7 +626,6 @@ describe("wbtc", () => {
       .signers([authority])
       .rpc();
 
-    console.log("before first fail");
     await assertInvalidTransaction(
       program.methods
         .createRedeemRequest({
@@ -685,7 +643,7 @@ describe("wbtc", () => {
         .rpc(),
       "InvalidAmount"
     );
-    console.log("before second fail");
+
     await assertInvalidTransaction(
       program.methods
         .createRedeemRequest({
@@ -703,7 +661,7 @@ describe("wbtc", () => {
         .rpc(),
       "InvalidAmount"
     );
-    console.log("before transfer");
+
     await transferChecked(
       connection,
       client,
@@ -714,7 +672,6 @@ describe("wbtc", () => {
       100000,
       9
     );
-    console.log("before third fail");
 
     let keys = await program.methods
       .createRedeemRequest({

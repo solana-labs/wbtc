@@ -8,7 +8,6 @@ use crate::error::ErrorCode;
 use crate::program::Wbtc;
 
 use crate::gen_mint_seeds;
-use crate::utils::validate_btc_address;
 use crate::{constants::CONFIG_SEED_PREFIX, constants::MINT_SEED_PREFIX, state::Config};
 
 #[derive(Accounts)]
@@ -51,7 +50,6 @@ pub struct InitializeArgs {
     pub authority: Pubkey,
     pub merchant_authority: Pubkey,
     pub custodian: Pubkey,
-    pub custodian_btc_address: String,
     pub name: String,
     pub symbol: String,
     pub uri: String,
@@ -59,8 +57,6 @@ pub struct InitializeArgs {
 
 pub fn handler(ctx: Context<InitializeAccounts>, args: InitializeArgs) -> Result<()> {
     let cfg = &mut ctx.accounts.config;
-
-    validate_btc_address(&args.custodian_btc_address)?;
 
     validate_upgrade_authority(ctx.accounts.authority.key(), ctx.remaining_accounts)?;
 
@@ -76,7 +72,6 @@ pub fn handler(ctx: Context<InitializeAccounts>, args: InitializeArgs) -> Result
     cfg.authority = ctx.accounts.authority.key();
     cfg.new_authority = args.authority;
     cfg.custodian = args.custodian;
-    cfg.custodian_btc_address = args.custodian_btc_address;
     cfg.merchant_authority = args.merchant_authority;
     cfg.mint = ctx.accounts.mint.key();
     cfg.mint_req_counter = 0;

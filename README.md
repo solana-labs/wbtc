@@ -9,9 +9,9 @@ This program will have two main authorities: the `authority` is capable of chang
 
 Devnet
 
-program - Fwc8BsPm6ktThT49CmcpXUpG5MhBTTnvUyRo4yTdEFDk
+program - BkeUQWpHeYQDTynE3q3XjWVnmgE6WGoWgDvjfc5aSPMo
 
-mint - NgTvvdb9mzPWcpyQL7dmNAoJZXtBEUyqtBvbr5RdzU3
+mint - Hb5pJ53KeUPCkUvaDZm7Y7WafEjuP1xjD4owaXksJ86R
 
 small dao - 49kUge8LHR6FoYEQqE7fq8UkZTE3ouLDeFeH8NmaxKBN
 
@@ -42,7 +42,7 @@ The following instructions either create or set basic functioning paramethers:
 * delete_merchant - deletes a `Merchant`.
 * set_authority - changes the authority address.
 * set_merchant_authority - changes the `merchant_authority` address.
-* set_custodian_btc_address - changes the custodian btc address stored in the `Config` account.
+* set_custodian_btc_address - changes the custodian btc deposit address stored in a given `Merchant` account.
 * set_custodian - changes the wallet that the custodian can use to interact with the program.
 * set_merchant_btc_address - changes the stored btc address for a given `Merchant`.
 

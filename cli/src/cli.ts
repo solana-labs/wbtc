@@ -39,7 +39,6 @@ async function initialize(config) {
     authority: new PublicKey(config.authority),
     merchantAuthority: new PublicKey(config.merchantAuthority),
     custodian: new PublicKey(config.custodian),
-    custodianBtcAddress: config.custodianBtcAddress,
     name: config.name,
     symbol: config.symbol,
     uri: config.uri,
@@ -90,6 +89,7 @@ async function viewMerchant(merchant: PublicKey) {
   console.log("Merchant - ", merchant);
   console.log(" authority: ", merchantInfo.authority);
   console.log(" btc_address: ", merchantInfo.btcAddress);
+  console.log(" custodian_btc_address: ", merchantInfo.custodianBtcAddress);
   console.log(" enabled: ", merchantInfo.enabled);
 }
 
@@ -118,7 +118,6 @@ async function viewConfig() {
   console.log(" new_authority: ", cfg.newAuthority);
   console.log(" merchant_authority: ", cfg.merchantAuthority);
   console.log(" custodian: ", cfg.custodian);
-  console.log(" custodianBtcAddress: ", cfg.custodianBtcAddress);
   console.log(" mint: ", cfg.mint);
   console.log(" mintReqCounter: ", cfg.mintReqCounter);
   console.log(" redeemReqCounter: ", cfg.redeemReqCounter);
@@ -187,9 +186,10 @@ async function toggleFunctionality(
   printSquadsLinkFromTransaction(squadsTx, multisig);
 }
 
-async function setCustodian(newCustodian: PublicKey) {
-  return await client.setCustodian(newCustodian);
+async function setCustodianBtcAddress(merchant: PublicKey, btcAddress: string) {
+  return await client.setCustodianBtcAddress(btcAddress, merchant);
 }
+
 
 async function setCustodianWithMultisig(
   newCustodian: PublicKey,
@@ -213,10 +213,7 @@ async function setAuthority(newAuthority: PublicKey, multisig: PublicKey) {
 }
 
 async function claimAuthority(multisig: PublicKey) {
-  let squadsTx = await client.claimAuthorityWithSquads(
-    multisig,
-    true
-  );
+  let squadsTx = await client.claimAuthorityWithSquads(multisig, true);
   printSquadsLinkFromTransaction(squadsTx, multisig);
 }
 
@@ -278,10 +275,6 @@ async function approveRedeemRequest(id: BN, tx: string) {
       "-a, --authority <pubkey>",
       "Authority address (big DAO). NOTE: THIS IS THE SIGNING AUTHORITY FROM THE SQUADS MULTISIG."
     )
-    .requiredOption(
-      "-b, --custodian-btc-address <string>",
-      "Custodian btc address."
-    )
     .requiredOption("-c, --custodian <pubkey>", "Custodian wallet address.")
     .requiredOption("-d, --decimals <int>", "Decimals for the token mint.")
     .requiredOption(
@@ -313,9 +306,9 @@ async function approveRedeemRequest(id: BN, tx: string) {
     )
     .action(async (pk, opts) => {
       if (opts.i) {
-        await viewMerchantFromWallet(new PublicKey(pk));
-      } else {
         await viewMerchant(new PublicKey(pk));
+      } else {
+        await viewMerchantFromWallet(new PublicKey(pk));
       }
     });
 
@@ -476,10 +469,28 @@ async function approveRedeemRequest(id: BN, tx: string) {
     .argument("<pubkey>", "The new custodian wallet address")
     .argument("<pubkey>", "The multisig address (big DAO)")
     .action(async (auth, msig) => {
-        await setCustodianWithMultisig(
-          new PublicKey(auth),
-          new PublicKey(msig)
-        );
+      await setCustodianWithMultisig(new PublicKey(auth), new PublicKey(msig));
+    });
+
+  program
+    .command("set-custodian-btc-address")
+    .description(
+      "Changes the current custodian btc address for a given merchant"
+    )
+    .argument("<pubkey>", "The merchant address")
+    .argument("<string>", "The custodian btc deposit address")
+    .option(
+      "-i",
+      "Fetch the merchant directly instead of deriving from wallet address."
+    )
+    .action(async (pk, btcAddress, opts) => {
+      let merchant = new PublicKey(pk);
+
+      if (!opts.i) {
+        merchant = client.getMerchantKey(merchant);
+      } 
+      
+      await setCustodianBtcAddress(merchant, btcAddress);
     });
 
   program

@@ -11,7 +11,7 @@ pub use instructions::*;
 
 use anchor_lang::prelude::*;
 
-declare_id!("Fwc8BsPm6ktThT49CmcpXUpG5MhBTTnvUyRo4yTdEFDk");
+declare_id!("BkeUQWpHeYQDTynE3q3XjWVnmgE6WGoWgDvjfc5aSPMo");
 
 #[program]
 pub mod wbtc {

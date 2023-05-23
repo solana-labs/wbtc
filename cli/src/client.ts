@@ -10,7 +10,10 @@ import {
 } from "@coral-xyz/anchor";
 import { Wbtc } from "../../target/types/wbtc";
 import { PublicKey, Keypair } from "@solana/web3.js";
-import { createAssociatedTokenAccount, getOrCreateAssociatedTokenAccount } from "@solana/spl-token";
+import {
+  createAssociatedTokenAccount,
+  getOrCreateAssociatedTokenAccount,
+} from "@solana/spl-token";
 import { readFileSync } from "fs";
 import Squads from "@sqds/sdk";
 
@@ -206,31 +209,29 @@ export class WbtcClient {
   async claimAuthorityWithSquads(
     multisigAddress: PublicKey,
     approve: boolean
-    ): Promise<PublicKey> {
-      const cfg = await this.getConfig();
-  
-      const msTx = await this.squads.createTransaction(multisigAddress, 1);
-  
-      const ixBuilder = this.program.methods
-        .claimAuthority()
-        .accounts({
-          config: this.configKey,
-          newAuthority: cfg.newAuthority,
-        });
-  
-      const msIx = await this.squads.addInstruction(
-        msTx.publicKey,
-        await ixBuilder.instruction()
-      );
-  
-      const fin = await this.squads.activateTransaction(msTx.publicKey);
-  
-      if (approve) await this.squads.approveTransaction(msTx.publicKey);
-  
-      console.log("Squads transaction: ", msTx.publicKey);
-      console.log("Squads instruction: ", msIx.publicKey);
-  
-      return msTx.publicKey;
+  ): Promise<PublicKey> {
+    const cfg = await this.getConfig();
+
+    const msTx = await this.squads.createTransaction(multisigAddress, 1);
+
+    const ixBuilder = this.program.methods.claimAuthority().accounts({
+      config: this.configKey,
+      newAuthority: cfg.newAuthority,
+    });
+
+    const msIx = await this.squads.addInstruction(
+      msTx.publicKey,
+      await ixBuilder.instruction()
+    );
+
+    const fin = await this.squads.activateTransaction(msTx.publicKey);
+
+    if (approve) await this.squads.approveTransaction(msTx.publicKey);
+
+    console.log("Squads transaction: ", msTx.publicKey);
+    console.log("Squads instruction: ", msIx.publicKey);
+
+    return msTx.publicKey;
   }
 
   async createMerchant(
@@ -575,10 +576,10 @@ export class WbtcClient {
     return msTx.publicKey;
   }
 
-  async setCustodianBtcAddress(newBtcAddress: string): Promise<string> {
+  async setCustodianBtcAddress(newBtcAddress: string, merchant: PublicKey): Promise<string> {
     return this.program.methods
       .setCustodianBtcAddress(newBtcAddress)
-      .accounts({ config: this.configKey })
+      .accounts({ config: this.configKey, merchant })
       .rpc();
   }
 
