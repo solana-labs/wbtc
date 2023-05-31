@@ -12,11 +12,12 @@ pub struct SetAuthorityAccounts<'info> {
     pub config: Account<'info, Config>,
 
     /// CHECK: nothing to check here, its just the new authority address
+    #[account(constraint = new_authority.key() != config.custodian @ ErrorCode::InvalidNewAuthority)]
     pub new_authority: AccountInfo<'info>,
 }
 
 pub fn handler(ctx: Context<SetAuthorityAccounts>) -> Result<()> {
-    ctx.accounts.config.authority = ctx.accounts.new_authority.key();
+    ctx.accounts.config.new_authority = ctx.accounts.new_authority.key();
 
     Ok(())
 }

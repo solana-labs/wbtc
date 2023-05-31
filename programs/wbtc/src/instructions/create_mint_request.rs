@@ -5,7 +5,7 @@ use crate::constants::MINT_REQUEST_SEED_PREFIX;
 use crate::error::ErrorCode;
 use crate::events::{EventKind, MintEvent};
 use crate::state::{Config, Merchant, MintRequest};
-use crate::utils::validate_btc_transaction;
+use crate::utils::{validate_btc_address, validate_btc_transaction};
 
 #[derive(Accounts)]
 #[instruction(args: CreateMintRequestArgs)]
@@ -47,6 +47,11 @@ pub fn handler(ctx: Context<CreateMintRequestAccounts>, args: CreateMintRequestA
     require!(config.mint_enabled, ErrorCode::MintingDisabled);
     require!(merchant.enabled, ErrorCode::MerchantDisabled);
 
+    require!(
+        validate_btc_address(&merchant.custodian_btc_address).is_ok(),
+        ErrorCode::InvalidCustodianBtcAddress
+    );
+
     validate_btc_transaction(&args.transaction_id)?;
 
     mint_request.merchant = merchant.key();
@@ -54,6 +59,7 @@ pub fn handler(ctx: Context<CreateMintRequestAccounts>, args: CreateMintRequestA
     mint_request.transaction_id = args.transaction_id;
     mint_request.client_token_account = ctx.accounts.client_token_account.key();
     mint_request.req_id = config.mint_req_counter;
+    mint_request.timestamp = Clock::get()?.unix_timestamp as u64;
 
     config.mint_req_counter = config.mint_req_counter.checked_add(1).unwrap();
 

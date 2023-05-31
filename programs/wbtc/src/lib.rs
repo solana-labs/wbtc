@@ -11,7 +11,7 @@ pub use instructions::*;
 
 use anchor_lang::prelude::*;
 
-declare_id!("5t659YCpvc9cSMNtZxDY9tpa3WArKpwe1eqPBKBaa8Rx");
+declare_id!("BkeUQWpHeYQDTynE3q3XjWVnmgE6WGoWgDvjfc5aSPMo");
 
 #[program]
 pub mod wbtc {
@@ -20,6 +20,10 @@ pub mod wbtc {
 
     pub fn initialize(ctx: Context<InitializeAccounts>, args: InitializeArgs) -> Result<()> {
         instructions::initialize::handler(ctx, args)
+    }
+
+    pub fn claim_authority(ctx: Context<ClaimAuthorityAccounts>) -> Result<()> {
+        instructions::claim_authority::handler(ctx)
     }
 
     pub fn set_authority(ctx: Context<SetAuthorityAccounts>) -> Result<()> {

@@ -29,8 +29,18 @@ pub enum ErrorCode {
     AddressTooLong,
     #[msg("the given address length is too short for a btc address (<26 characters)")]
     AddressTooShort,
+    #[msg("the address contains invalid (non-ascii) characters")]
+    InvalidAddressCharacters,
+    #[msg("the transaction contains invalid (non-ascii) characters")]
+    InvalidTransactionCharacters,
     #[msg("invalid reamining accounts on initialise")]
     InvalidInitialiseRemainingAccounts,
     #[msg("invalid token amount")]
     InvalidAmount,
+    #[msg("the new authority is invalid (collision with custodian)")]
+    InvalidNewAuthority,
+    #[msg("the new custodian is invalid (collision with authority/new_authority")]
+    InvalidNewCustodian,
+    #[msg("the custodian btc deposit address is invalid for the given merchant")]
+    InvalidCustodianBtcAddress,
 }
