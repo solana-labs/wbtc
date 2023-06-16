@@ -95,4 +95,4 @@ The remaining `initialize` instruction can be called by anyone, but ideally by t
 
 # Audits
 
-TBD
+Audit performed by OtterSec can be reviewed [here](audits/ottersec_1.pdf). All issues that were found are resolved and comitted to the current master branch.
